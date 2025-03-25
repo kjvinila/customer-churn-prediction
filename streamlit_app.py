@@ -107,7 +107,7 @@ if st.button('Predict Churn'):
     st.pyplot(fig)
 
 # -------------------------------
-# 📌 CLUSTER CUSTOMERS USING K-MEANS
+# 🧠 CLUSTER CUSTOMERS USING K-MEANS
 # -------------------------------
 st.subheader("🧠 Customer Segmentation")
 
@@ -118,14 +118,36 @@ sample_data = np.random.rand(100, 11) * 1000
 scaler = StandardScaler()
 sample_data_scaled = scaler.fit_transform(sample_data)
 
+# Elbow Method to find optimal clusters
+st.subheader("🎯 Optimal Number of Clusters (Elbow Method)")
+inertia = []
+K = range(1, 10)
+
+for k in K:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(sample_data_scaled)
+    inertia.append(kmeans.inertia_)
+
+# Plot the Elbow Curve
+fig, ax = plt.subplots()
+ax.plot(K, inertia, marker='o')
+ax.set_xlabel('Number of Clusters')
+ax.set_ylabel('Inertia')
+ax.set_title('Elbow Method')
+st.pyplot(fig)
+
+# User selects number of clusters
+num_clusters = st.slider("Select Number of Clusters", min_value=2, max_value=8, value=3)
+
 # Create KMeans model
-kmeans = KMeans(n_clusters=3, random_state=42)
+kmeans = KMeans(n_clusters=num_clusters, random_state=42)
 clusters = kmeans.fit_predict(sample_data_scaled)
 
 # Add clusters to the data
 sample_data_with_clusters = np.column_stack((sample_data_scaled, clusters))
 
 # Plot the clusters
+st.subheader(f"📌 Customer Segmentation ({num_clusters} Clusters)")
 fig, ax = plt.subplots(figsize=(8, 6))
 sns.scatterplot(
     x=sample_data_scaled[:, 0], 
@@ -134,7 +156,7 @@ sns.scatterplot(
     palette="viridis", 
     s=100
 )
-ax.set_title('Customer Segmentation (K-Means Clustering)')
+ax.set_title(f'Customer Segmentation with {num_clusters} Clusters')
 ax.set_xlabel('Feature 1 (Scaled)')
 ax.set_ylabel('Feature 2 (Scaled)')
 st.pyplot(fig)
@@ -142,3 +164,4 @@ st.pyplot(fig)
 # Footer
 st.markdown("---")
 st.markdown("💡 Built with ❤️ using Streamlit & Random Forest")
+
