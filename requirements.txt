@@ -6,3 +6,4 @@ matplotlib
 seaborn 
 plotly 
 plotly 
+scikit-learn==1.5.2 
