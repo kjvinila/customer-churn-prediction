@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+import pandas as pd
 
 # Load the model
 model = joblib.load('model.pkl')
@@ -97,25 +98,12 @@ if st.button('Predict Churn'):
     ax.set_title("Feature Importance")
     st.pyplot(fig)
 
-    # -------------------------------
-    # 📈 MODEL CONFIDENCE CHART
-    # -------------------------------
-    st.subheader("📈 Model Confidence")
-    fig, ax = plt.subplots(figsize=(4, 1))
-    ax.barh(['Not Churn', 'Churn'], [1 - probability, probability], color=['green', 'red'])
-    ax.set_xlim(0, 1)
-    st.pyplot(fig)
-
-
 # -------------------------------
 # 🧠 CLUSTER CUSTOMERS USING K-MEANS
 # -------------------------------
 st.subheader("🧠 Customer Segmentation")
 
-# Sample data for clustering (can adjust based on your actual dataset)
 sample_data = np.random.rand(100, 11) * 1000
-
-# Scale the data for better clustering
 scaler = StandardScaler()
 sample_data_scaled = scaler.fit_transform(sample_data)
 
@@ -129,7 +117,6 @@ for k in K:
     kmeans.fit(sample_data_scaled)
     inertia.append(kmeans.inertia_)
 
-# Plot the Elbow Curve
 fig, ax = plt.subplots()
 ax.plot(K, inertia, marker='o')
 ax.set_xlabel('Number of Clusters')
@@ -137,68 +124,57 @@ ax.set_ylabel('Inertia')
 ax.set_title('Elbow Method')
 st.pyplot(fig)
 
-# User selects number of clusters
 num_clusters = st.slider("Select Number of Clusters", min_value=2, max_value=8, value=3)
 
-# Create KMeans model
+# Fit KMeans
 kmeans = KMeans(n_clusters=num_clusters, random_state=42)
 clusters = kmeans.fit_predict(sample_data_scaled)
 
-# Add clusters to the data
-sample_data_with_clusters = np.column_stack((sample_data_scaled, clusters))
-
 # -------------------------------
-# 📌 Define Cluster Types
+# 🎯 RECOMMENDATIONS ENGINE
 # -------------------------------
-st.subheader(f"📌 Customer Segmentation ({num_clusters} Clusters)")
+st.subheader("🚀 Recommendations")
 
-# Define cluster types
-cluster_labels = {
-    0: "High Churn Risk", 
-    1: "Loyal Customers", 
-    2: "Potential Upsell"
+recommendations = {
+    0: "Consider offering discounts or incentives to reduce churn risk.",
+    1: "Encourage product upselling and cross-selling opportunities.",
+    2: "Reward loyal customers with loyalty points or better product offerings."
 }
 
-# Create cluster mapping based on average cluster characteristics
-cluster_names = [cluster_labels.get(i, f"Cluster {i}") for i in range(num_clusters)]
-
-# Plot clusters
-fig, ax = plt.subplots(figsize=(8, 6))
-sns.scatterplot(
-    x=sample_data_scaled[:, 0], 
-    y=sample_data_scaled[:, 1], 
-    hue=clusters, 
-    palette="viridis", 
-    s=100
-)
-
-# Annotate cluster labels
-for i, txt in enumerate(cluster_names):
-    ax.annotate(txt, (sample_data_scaled[clusters == i, 0].mean(), 
-                      sample_data_scaled[clusters == i, 1].mean()), 
-                fontsize=10, color='black', fontweight='bold', ha='center')
-
-ax.set_title(f'Customer Segmentation with {num_clusters} Clusters')
-ax.set_xlabel('Feature 1 (Scaled)')
-ax.set_ylabel('Feature 2 (Scaled)')
-st.pyplot(fig)
-
-# -------------------------------
-# 📊 Segment Insights
-# -------------------------------
-st.subheader("📊 Segment Insights")
+cluster_names = ["High Churn Risk", "Potential Upsell", "Loyal Customers"]
 
 for i in range(num_clusters):
     segment_size = (clusters == i).sum()
     st.markdown(f"**{cluster_names[i]}:** {segment_size} customers")
-
-    # Highlight high-risk segment
+    
     if cluster_names[i] == "High Churn Risk":
-        st.warning(f"🚨 **{segment_size} customers are at high risk of churn!**")
-    elif cluster_names[i] == "Loyal Customers":
-        st.success(f"✅ **{segment_size} loyal customers identified.**")
+        st.warning(f"🚨 {segment_size} customers are at high risk of churn!")
     elif cluster_names[i] == "Potential Upsell":
-        st.info(f"💡 **{segment_size} customers could be upsold with better offers!**")
+        st.info(f"💡 {segment_size} customers could be upsold!")
+    elif cluster_names[i] == "Loyal Customers":
+        st.success(f"✅ {segment_size} loyal customers identified.")
+
+    # Show recommendation
+    st.markdown(f"**💡 Recommendation:** {recommendations.get(i)}")
+
+# -------------------------------
+# 📥 DOWNLOAD REPORT
+# -------------------------------
+st.subheader("📥 Download Report")
+
+report = pd.DataFrame({
+    'Cluster': clusters,
+    'Recommendation': [recommendations.get(i) for i in clusters]
+})
+
+csv = report.to_csv(index=False).encode('utf-8')
+
+st.download_button(
+    label="📥 Download Report (CSV)",
+    data=csv,
+    file_name='churn_report.csv',
+    mime='text/csv'
+)
 
 # Footer
 st.markdown("---")
