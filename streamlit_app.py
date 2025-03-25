@@ -106,6 +106,7 @@ if st.button('Predict Churn'):
     ax.set_xlim(0, 1)
     st.pyplot(fig)
 
+
 # -------------------------------
 # 🧠 CLUSTER CUSTOMERS USING K-MEANS
 # -------------------------------
@@ -146,8 +147,22 @@ clusters = kmeans.fit_predict(sample_data_scaled)
 # Add clusters to the data
 sample_data_with_clusters = np.column_stack((sample_data_scaled, clusters))
 
-# Plot the clusters
+# -------------------------------
+# 📌 Define Cluster Types
+# -------------------------------
 st.subheader(f"📌 Customer Segmentation ({num_clusters} Clusters)")
+
+# Define cluster types
+cluster_labels = {
+    0: "High Churn Risk", 
+    1: "Loyal Customers", 
+    2: "Potential Upsell"
+}
+
+# Create cluster mapping based on average cluster characteristics
+cluster_names = [cluster_labels.get(i, f"Cluster {i}") for i in range(num_clusters)]
+
+# Plot clusters
 fig, ax = plt.subplots(figsize=(8, 6))
 sns.scatterplot(
     x=sample_data_scaled[:, 0], 
@@ -156,12 +171,35 @@ sns.scatterplot(
     palette="viridis", 
     s=100
 )
+
+# Annotate cluster labels
+for i, txt in enumerate(cluster_names):
+    ax.annotate(txt, (sample_data_scaled[clusters == i, 0].mean(), 
+                      sample_data_scaled[clusters == i, 1].mean()), 
+                fontsize=10, color='black', fontweight='bold', ha='center')
+
 ax.set_title(f'Customer Segmentation with {num_clusters} Clusters')
 ax.set_xlabel('Feature 1 (Scaled)')
 ax.set_ylabel('Feature 2 (Scaled)')
 st.pyplot(fig)
 
+# -------------------------------
+# 📊 Segment Insights
+# -------------------------------
+st.subheader("📊 Segment Insights")
+
+for i in range(num_clusters):
+    segment_size = (clusters == i).sum()
+    st.markdown(f"**{cluster_names[i]}:** {segment_size} customers")
+
+    # Highlight high-risk segment
+    if cluster_names[i] == "High Churn Risk":
+        st.warning(f"🚨 **{segment_size} customers are at high risk of churn!**")
+    elif cluster_names[i] == "Loyal Customers":
+        st.success(f"✅ **{segment_size} loyal customers identified.**")
+    elif cluster_names[i] == "Potential Upsell":
+        st.info(f"💡 **{segment_size} customers could be upsold with better offers!**")
+
 # Footer
 st.markdown("---")
 st.markdown("💡 Built with ❤️ using Streamlit & Random Forest")
-
