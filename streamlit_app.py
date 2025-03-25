@@ -3,6 +3,8 @@ import joblib
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
 
 # Load the model
 model = joblib.load('model.pkl')
@@ -103,6 +105,39 @@ if st.button('Predict Churn'):
     ax.barh(['Not Churn', 'Churn'], [1 - probability, probability], color=['green', 'red'])
     ax.set_xlim(0, 1)
     st.pyplot(fig)
+
+# -------------------------------
+# 📌 CLUSTER CUSTOMERS USING K-MEANS
+# -------------------------------
+st.subheader("🧠 Customer Segmentation")
+
+# Sample data for clustering (can adjust based on your actual dataset)
+sample_data = np.random.rand(100, 11) * 1000
+
+# Scale the data for better clustering
+scaler = StandardScaler()
+sample_data_scaled = scaler.fit_transform(sample_data)
+
+# Create KMeans model
+kmeans = KMeans(n_clusters=3, random_state=42)
+clusters = kmeans.fit_predict(sample_data_scaled)
+
+# Add clusters to the data
+sample_data_with_clusters = np.column_stack((sample_data_scaled, clusters))
+
+# Plot the clusters
+fig, ax = plt.subplots(figsize=(8, 6))
+sns.scatterplot(
+    x=sample_data_scaled[:, 0], 
+    y=sample_data_scaled[:, 1], 
+    hue=clusters, 
+    palette="viridis", 
+    s=100
+)
+ax.set_title('Customer Segmentation (K-Means Clustering)')
+ax.set_xlabel('Feature 1 (Scaled)')
+ax.set_ylabel('Feature 2 (Scaled)')
+st.pyplot(fig)
 
 # Footer
 st.markdown("---")
